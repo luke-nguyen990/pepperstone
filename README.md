@@ -1,85 +1,85 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+## Tech Stack
+- ### Frontend:
+  - `HTTP API` only through [Swagger](https://pepperstone-288751689763.asia-southeast1.run.app/api).
+- ### Backend: 
+  - `Typescript on NestJS`.
+  - `In-memory` storage (volatile memory):
+    - It doesn't require much configuration/setup like MongoDB, PostgreSQL, i.e fitting the 2-3h timing for this take-home test.
+    - It helps to illustrate coding structure, i.e it is setup in a decoupled way following `Domain-driven-design` so that it can be switched by other types of storages without much changing to the logic if needed.
+    
+- ### Infrastructure.
+  #### Tech stack:
+    - `Serverless` on GCP - i.e `Cloudrun` is the computing layer.
+    - CICD using `Cloudbuild` integration with `Github` CICD.
+    - Reasons for this infra tech stack:
+      - It is well suited for fast deployment and e2e integration, i.e fitting the 2-3h timing for this take-home test.
+      - The horizontal scaling is abstracted away and handled by cloud providers.
+      - GPC over Azure/AWS because I have free personal credits and account available.
+  #### Deployment:
+    - GCP's Cloudbuild integrate with Github's CICD.
+    - I only needed to create a Dockerfile and setup serverless with a MVP networking layer like VPN and Cloud NAT.
+    - Serverless will handle auto scaling and periodically health check.
+    - Most of the flow is handled by out-of-box solution by Github CICD and Google Cloud Build.
+    - No KMS and other components like persistent layer or IoC as they would force me going over 3h limit.
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+- ### AI Assistant Tools:
+  - Github Copilot for code completion.
+    - Except helping with unit tests and docs for method-contracts, the majority of the code (>90%) is self-written.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
-## Description
+## Architecture
+### Design Philosophies:
+- In general, code structure following `modular monolith` & `domain-driven-design`.
+- Implementation following `contract-first-driven` development, by declaring the contracts first and implementation later: [Github Commit](https://github.com/luke-nguyen990/pepperstone/commit/c2c84c5f44d843a908f91d40da87eff3653b4fd4)
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+### Modularized Components:
 
-## Project setup
+#### Player Module's contracts
+```typescript
+createPlayer(name: string): PlayerModel
 
-```bash
-$ npm install
+getPlayer(id: string): PlayerModel
+
+getPlayers(ids: string[]): PlayerModel[]
 ```
 
-## Compile and run the project
+#### Game Module's contracts
+```typescript
+createGame(): GameModel
 
-```bash
-# development
-$ npm run start
+getGame(gameId: string): GameModel
 
-# watch mode
-$ npm run start:dev
+startGame(gameId: string): GameModel
 
-# production mode
-$ npm run start:prod
+addPlayer(gameId: string, playerName: string): GameModel
+
+addRollScores(gameId: string, playerId: string, scores: string[]): GameModel
 ```
 
-## Run tests
-
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+#### Score Module's contracts
+```typescript
+computeFrameScores(rolls: string[][]): number[]
 ```
 
-## Resources
+## Process break-down:
+*Although Github commits history shows only around 2 hours of coding, the total time is estimated to be 3 hours, plus/minus 15 minutes.*
 
-Check out a few resources that may come in handy when working with NestJS:
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+Components which are not shown in Github commit history:
 
-## Support
+- 5-10 minutes: Reading requirements and deciding on the design, code structure, tech stack.
+  - The test's description gives a lot of freedom as well as open questions for candidates. The boundary for choosing code structure, tech-stack is big.
+  - There is a balance between not over engineering and going over 3h while still showing the engineering best practices.
+- 10-15 minutes: Thinking about how the modularized components and their contracts look.
+- 10-15 minutes: Working on the state machines for:
+  - Game states changing. 
+  - Score updating and validating.
+  - I identified those 2 parts have many edge-cases, thus state-machine would help to cover all scenarioes. Some unhappy cases examples:
+    - Start game without enough players.
+    - Start game with less than 2 players.
+    - Sending invalid rolls scores, out-of-orders.
+    - Game is not finished after 10th frame scores from all players.
+- 15-20 minutes: Setting up Infra and CICD.
+- 20-25 minutes: README.md
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+Swagger API is availabe at [Google Serverless Cloudrun](https://pepperstone-288751689763.asia-southeast1.run.app/api)

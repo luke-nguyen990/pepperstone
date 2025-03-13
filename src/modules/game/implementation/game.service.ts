@@ -36,7 +36,6 @@ export class GameService extends GameInterface {
       );
     }
 
-    // Initialize the first player's turn
     gameEntity.currentPlayerId = gameEntity.playersRolls[0].playerId;
     gameEntity.currentFrame = 1;
     gameEntity.status = GameStatus.IN_PROGRESS;
