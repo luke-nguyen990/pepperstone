@@ -15,13 +15,15 @@ export class ScoreService extends ScoreInterface {
       const isSpare = frame.length === 2 && frame[1] === '/';
 
       if (isStrike) {
+        // Strike: 10 points + next two rolls
         const bonus = this.getBonusRolls(rolls, frameIndex, 2);
         totalScore += 10 + bonus;
       } else if (isSpare) {
-        const firstRoll = this.parseRoll(frame[0]);
+        // Spare: 10 points + first roll of the next frame
         const bonus = this.getBonusRolls(rolls, frameIndex, 1);
-        totalScore += 10 + bonus - firstRoll;
+        totalScore += 10 + bonus;
       } else {
+        // Open frame: sum of both rolls
         const frameTotal = frame.reduce(
           (sum, roll) => sum + this.parseRoll(roll),
           0,
@@ -49,9 +51,14 @@ export class ScoreService extends ScoreInterface {
       i++
     ) {
       const nextFrame = rolls[i];
-      for (const roll of nextFrame) {
-        if (rollsToCount === 0) break;
-        bonus += this.parseRoll(roll);
+      for (let j = 0; j < nextFrame.length && rollsToCount > 0; j++) {
+        const roll = nextFrame[j];
+        if (roll === '/') {
+          // Spare bonus: 10 - first roll of the frame
+          bonus += 10 - this.parseRoll(nextFrame[0]);
+        } else {
+          bonus += this.parseRoll(roll);
+        }
         rollsToCount--;
       }
     }
