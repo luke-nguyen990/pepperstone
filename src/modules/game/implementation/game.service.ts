@@ -27,11 +27,13 @@ export class GameService extends GameInterface {
     const gameEntity = this.findGameById(id);
 
     if (gameEntity.status !== GameStatus.WAITING) {
-      throw new Error('Game is already started');
+      throw new Error('Cannot start game as it is not in the "WAITING" state.');
     }
 
     if (gameEntity.playersRolls.length < GameService.MIN_PLAYERS) {
-      throw new Error('Game needs at least 2 players to start');
+      throw new Error(
+        `Cannot start the game. At least ${GameService.MIN_PLAYERS} players are required.`,
+      );
     }
 
     gameEntity.status = GameStatus.IN_PROGRESS;
@@ -70,13 +72,15 @@ export class GameService extends GameInterface {
     const gameEntity = this.findGameById(gameId);
 
     if (gameEntity.status !== GameStatus.IN_PROGRESS) {
-      throw new Error('Game is not in progress');
+      throw new Error('Cannot add scores as the game is not in progress.');
     }
 
     const playerRolls = this.findPlayerRolls(gameEntity, playerId);
 
     playerRolls.rolls.push(scores);
-    playerRolls.frameScores.push(this.scoreService.calculateScore(scores));
+    playerRolls.frameScores = this.scoreService.computeFrameScores(
+      playerRolls.rolls,
+    );
 
     GameRepository.save(gameEntity);
 
@@ -86,18 +90,20 @@ export class GameService extends GameInterface {
   private findGameById(gameId: string): GameEntity {
     const gameEntity = GameRepository.findOne(gameId);
     if (!gameEntity) {
-      throw new Error('Game not found');
+      throw new Error(`Game with ID "${gameId}" not found.`);
     }
     return gameEntity;
   }
 
   private validateGameForAddingPlayers(gameEntity: GameEntity): void {
     if (gameEntity.status !== GameStatus.WAITING) {
-      throw new Error('Game is already started');
+      throw new Error('Cannot add players as the game has already started.');
     }
 
     if (gameEntity.playersRolls.length >= GameService.MAX_PLAYERS) {
-      throw new Error('Game is full');
+      throw new Error(
+        `Cannot add more players. The maximum number of players (${GameService.MAX_PLAYERS}) has been reached.`,
+      );
     }
   }
 
@@ -109,7 +115,7 @@ export class GameService extends GameInterface {
       (p) => p.playerId === playerId,
     );
     if (!playerRolls) {
-      throw new Error('Player not found');
+      throw new Error(`Player with ID "${playerId}" not found in the game.`);
     }
     return playerRolls;
   }
