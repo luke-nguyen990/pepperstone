@@ -36,6 +36,9 @@ export class GameService extends GameInterface {
       );
     }
 
+    // Initialize the first player's turn
+    gameEntity.currentPlayerId = gameEntity.playersRolls[0].playerId;
+    gameEntity.currentFrame = 1;
     gameEntity.status = GameStatus.IN_PROGRESS;
     GameRepository.save(gameEntity);
 
@@ -74,19 +77,60 @@ export class GameService extends GameInterface {
     if (gameEntity.status !== GameStatus.IN_PROGRESS) {
       throw new Error('Cannot add scores. Game is not in progress.');
     }
+    this.validateRolls(scores);
+    if (gameEntity.currentPlayerId !== playerId) {
+      throw new Error(`It is not Player ${playerId}'s turn.`);
+    }
 
     const playerRolls = this.findPlayerRolls(gameEntity, playerId);
-
-    this.validateRolls(scores);
 
     playerRolls.rolls.push(scores);
     playerRolls.frameScores = this.scoreService.computeFrameScores(
       playerRolls.rolls,
     );
 
+    const isTenthFrame = gameEntity.currentFrame === 10;
+    const hasCompletedTurn = this.hasPlayerCompletedFrame(
+      playerRolls.rolls,
+      isTenthFrame,
+    );
+
+    if (hasCompletedTurn) {
+      const nextPlayerIndex =
+        (gameEntity.playersRolls.findIndex((p) => p.playerId === playerId) +
+          1) %
+        gameEntity.playersRolls.length;
+      gameEntity.currentPlayerId =
+        gameEntity.playersRolls[nextPlayerIndex].playerId;
+
+      if (nextPlayerIndex === 0) {
+        gameEntity.currentFrame++;
+
+        if (gameEntity.currentFrame > 10) {
+          gameEntity.status = GameStatus.FINISHED;
+        }
+      }
+    }
+
     GameRepository.save(gameEntity);
 
     return this.mapToModel(gameEntity);
+  }
+
+  private hasPlayerCompletedFrame(
+    rolls: string[][],
+    isTenthFrame: boolean,
+  ): boolean {
+    if (isTenthFrame) {
+      const flatRolls = rolls.flat();
+      return (
+        flatRolls.length >= 2 &&
+        (flatRolls.length === 3 || flatRolls[0] === 'x' || flatRolls[1] === '/')
+      );
+    } else {
+      const lastRolls = rolls[rolls.length - 1] || [];
+      return lastRolls.includes('x') || lastRolls.length === 2;
+    }
   }
 
   private validateRolls(scores: string[]): void {

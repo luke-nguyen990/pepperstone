@@ -168,6 +168,7 @@ describe('GameService', () => {
         rolls: [],
         frameScores: [],
       });
+      gameEntity.currentPlayerId = 'player1';
       GameRepository.save(gameEntity);
 
       const game = gameService.addRollScores(gameEntity.id, 'player1', [
@@ -177,6 +178,24 @@ describe('GameService', () => {
 
       expect(game.playersScores[0].rolls).toEqual([['5', '/']]);
       expect(game.playersScores[0].framesScore).toEqual([10]);
+    });
+
+    it('should throw an error if the rolls are invalid', () => {
+      const gameEntity = new GameEntity();
+      gameEntity.status = GameStatus.IN_PROGRESS;
+      gameEntity.playersRolls.push({
+        playerId: 'player1',
+        rolls: [],
+        frameScores: [],
+      });
+      gameEntity.currentPlayerId = 'player1';
+      GameRepository.save(gameEntity);
+
+      expect(() =>
+        gameService.addRollScores(gameEntity.id, 'player1', ['a']),
+      ).toThrowError(
+        'Invalid rolls: [a]. Rolls must be "x", "/", ".", or digits.',
+      );
     });
   });
 });

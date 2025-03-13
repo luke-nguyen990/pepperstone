@@ -2,14 +2,14 @@ import { GameStatus } from '../game.model';
 
 export class GameEntity {
   id: string;
-  playersRolls: Array<{
+  playersRolls: {
     playerId: string;
     rolls: string[][];
     frameScores: number[];
-  }>;
-  currentFrame: number;
-  status: GameStatus;
-
+  }[];
+  currentFrame: number = 1;
+  currentPlayerId: string;
+  status: GameStatus = GameStatus.WAITING;
   constructor() {
     this.id = `game-${GameRepository.storage.size + 1}`;
     this.playersRolls = [];
