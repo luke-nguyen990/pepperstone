@@ -7,17 +7,19 @@ export class ScoreService extends ScoreInterface {
     const frameScores: number[] = [];
     let totalScore = 0;
 
-    for (let i = 0; i < rolls.length; i++) {
-      const frame = rolls[i];
+    for (let frameIndex = 0; frameIndex < rolls.length; frameIndex++) {
+      const frame = rolls[frameIndex];
+      this.validateFrame(frame);
+
       const isStrike = frame[0] === 'x';
       const isSpare = frame.length === 2 && frame[1] === '/';
 
       if (isStrike) {
-        const bonus = this.getBonusRolls(rolls, i, 2);
+        const bonus = this.getBonusRolls(rolls, frameIndex, 2);
         totalScore += 10 + bonus;
       } else if (isSpare) {
         const firstRoll = this.parseRoll(frame[0]);
-        const bonus = this.getBonusRolls(rolls, i, 1);
+        const bonus = this.getBonusRolls(rolls, frameIndex, 1);
         totalScore += 10 + bonus - firstRoll;
       } else {
         const frameTotal = frame.reduce(
@@ -66,8 +68,26 @@ export class ScoreService extends ScoreInterface {
       );
     } else if (roll === '.') {
       return 0;
+    } else if (!/^\d$/.test(roll)) {
+      throw new Error(
+        `Invalid roll value: "${roll}". Must be a digit, "x", "/", or ".".`,
+      );
     } else {
       return parseInt(roll, 10);
+    }
+  }
+
+  private validateFrame(frame: string[]): void {
+    if (frame.length === 0 || frame.length > 2) {
+      throw new Error(
+        `Invalid frame: [${frame.join(', ')}]. A frame must contain 1 or 2 rolls.`,
+      );
+    }
+
+    if (frame.length === 2 && frame[0] === 'x') {
+      throw new Error(
+        `Invalid frame: [${frame.join(', ')}]. A strike must be a single roll.`,
+      );
     }
   }
 }

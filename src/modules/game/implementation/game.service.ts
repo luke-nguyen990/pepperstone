@@ -27,7 +27,7 @@ export class GameService extends GameInterface {
     const gameEntity = this.findGameById(id);
 
     if (gameEntity.status !== GameStatus.WAITING) {
-      throw new Error('Cannot start game as it is not in the "WAITING" state.');
+      throw new Error('Cannot start game. Status must be "WAITING".');
     }
 
     if (gameEntity.playersRolls.length < GameService.MIN_PLAYERS) {
@@ -72,10 +72,12 @@ export class GameService extends GameInterface {
     const gameEntity = this.findGameById(gameId);
 
     if (gameEntity.status !== GameStatus.IN_PROGRESS) {
-      throw new Error('Cannot add scores as the game is not in progress.');
+      throw new Error('Cannot add scores. Game is not in progress.');
     }
 
     const playerRolls = this.findPlayerRolls(gameEntity, playerId);
+
+    this.validateRolls(scores);
 
     playerRolls.rolls.push(scores);
     playerRolls.frameScores = this.scoreService.computeFrameScores(
@@ -85,6 +87,14 @@ export class GameService extends GameInterface {
     GameRepository.save(gameEntity);
 
     return this.mapToModel(gameEntity);
+  }
+
+  private validateRolls(scores: string[]): void {
+    if (!scores.every((roll) => /^[x/.\d]$/.test(roll))) {
+      throw new Error(
+        `Invalid rolls: [${scores.join(', ')}]. Rolls must be "x", "/", ".", or digits.`,
+      );
+    }
   }
 
   private findGameById(gameId: string): GameEntity {
@@ -97,12 +107,12 @@ export class GameService extends GameInterface {
 
   private validateGameForAddingPlayers(gameEntity: GameEntity): void {
     if (gameEntity.status !== GameStatus.WAITING) {
-      throw new Error('Cannot add players as the game has already started.');
+      throw new Error('Cannot add players. Game is already in progress.');
     }
 
     if (gameEntity.playersRolls.length >= GameService.MAX_PLAYERS) {
       throw new Error(
-        `Cannot add more players. The maximum number of players (${GameService.MAX_PLAYERS}) has been reached.`,
+        `Cannot add more players. Maximum limit (${GameService.MAX_PLAYERS}) reached.`,
       );
     }
   }
